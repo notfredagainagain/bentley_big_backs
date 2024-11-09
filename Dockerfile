@@ -1,26 +1,19 @@
+# Base image with Python
 FROM python:3.10-slim
 
-# Install Chrome
+# Install system dependencies
 RUN apt-get update && apt-get install -y wget gnupg && \
     wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list && \
-    apt-get update && \
-    apt-get install -y google-chrome-stable && \
+    apt-get update && apt-get install -y google-chrome-stable chromium-driver && \
     rm -rf /var/lib/apt/lists/*
 
-# Install ChromeDriver
-RUN apt-get update && apt-get install -y unzip && \
-    wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip && \
-    unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/ && \
-    rm /tmp/chromedriver.zip
-
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy your app files
+# Copy the app files to the container
 COPY . /app
 WORKDIR /app
 
-# Run Streamlit
-CMD ["streamlit", "run", "main.py"]
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Run the Streamlit app
+CMD ["streamlit", "run", "main.py", "--server.port=8501", "--server.address=0.0.0.0"]
