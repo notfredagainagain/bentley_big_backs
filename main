@@ -1,0 +1,53 @@
+import streamlit as st
+import requests
+from bs4 import BeautifulSoup
+
+# Function to fetch and parse the daily menu
+def fetch_menu():
+    url = 'https://bentley.sodexomyway.com/en-us/locations/the-921'
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    
+    # Extract menu items; adjust the parsing logic based on the actual HTML structure
+    menu_items = []
+    for item in soup.find_all('div', class_='menu-item'):
+        name = item.find('div', class_='menu-item-name').text.strip()
+        description = item.find('div', class_='menu-item-description').text.strip()
+        allergens = item.find('div', class_='menu-item-allergens').text.strip()
+        menu_items.append({
+            'name': name,
+            'description': description,
+            'allergens': allergens
+        })
+    return menu_items
+
+# Function to filter menu items based on dietary preferences
+def filter_menu(menu_items, preferences):
+    filtered_menu = []
+    for item in menu_items:
+        if all(pref.lower() in item['description'].lower() for pref in preferences):
+            filtered_menu.append(item)
+    return filtered_menu
+
+# Streamlit app
+st.title('The 921 Dietary Suggestions')
+st.write('Select your dietary preferences to see suitable menu items.')
+
+# User input for dietary preferences
+preferences = st.multiselect(
+    'Dietary Preferences',
+    ['Vegetarian', 'Vegan', 'Gluten-Free', 'Halal', 'Kosher', 'Nut-Free', 'Dairy-Free']
+)
+
+# Fetch and display the menu
+if st.button('Show Menu'):
+    menu_items = fetch_menu()
+    if preferences:
+        menu_items = filter_menu(menu_items, preferences)
+    if menu_items:
+        for item in menu_items:
+            st.subheader(item['name'])
+            st.write(item['description'])
+            st.write(f"**Allergens:** {item['allergens']}")
+    else:
+        st.write('No menu items match your dietary preferences.')
