@@ -3,4 +3,3 @@ beautifulsoup4
 selenium
 requests
 chromedriver-autoinstaller
-google-chrome-stable
